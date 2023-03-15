@@ -1,0 +1,80 @@
+﻿@page "/ExcelDataShow"
+<PageTitle>Excel Data</PageTitle>
+@using CalculationsBlazorApp.Data
+@inject ExcelDataService ExcelService
+<h1>Excel Data</h1>
+<p>This component demonstrates fetching data from a service.</p>
+@if (allData == null)
+{
+        <p><em>Loading...</em></p>
+}
+else
+{
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Ship Mode</th>
+                    <th>Profit</th>
+                    <th>Unit Price</th>
+                    <th>Shipping Cost</th>
+                    <th>Customer Name</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var data in allData)
+            {
+                        <tr>
+                            <td>@data.ShipMode</td>
+                            <td>@data.Profit</td>
+                            <td>@data.UnitPrice</td>
+                            <td>@data.ShippingCost</td>
+                            <td>@data.CustomerName</td>
+                        </tr>
+            }
+            </tbody>
+        </table>
+}
+
+<p>What we want to do with IronXL Test</p>
+<p>Please provide the path of the excel file to compute</p>
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="basic-addon2" @bind-value="@UserGivenPath">
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" @onclick="HandleSubmit">Submit</button>
+    </div>
+</div>
+<p></p>
+<p></p>
+<p>Total Sum of Profit: @Sum</p>
+
+@code {
+    public string UserGivenPath { get; set; } = @"C:\Data\Data.xlsx";
+
+    private ExcelData[] allData;
+    protected override async Task OnInitializedAsync() => allData = await ExcelService.GetExcelAsync(UserGivenPath);
+
+    #region What we want
+    private ExcelData[] loadedData;
+    public double Sum { get; set; }
+    async void HandleSubmit()
+    {
+        var secondTask = ReadIronXLAsync();
+        loadedData = await secondTask;
+
+        foreach (ExcelData row in loadedData)
+        {
+            Sum += Convert.ToDouble(row.Profit);
+        }
+        StateHasChanged();
+    }
+
+    async Task<ExcelData[]> ReadIronXLAsync()
+    {
+        return await ExcelService.GetExcelAsync(UserGivenPath);
+    }
+
+    #endregion // What we want
+
+
+
+}

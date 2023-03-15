@@ -1,0 +1,146 @@
+﻿@page "/"
+@using ScienceBlazorApp.Data
+@inject ExcelDataService ExcelService
+
+
+<EditForm Model="@dto" OnSubmit="@HandleSubmit">
+    <label>Input Length:
+        <InputNumber id="length" @bind-Value="dto.Length"/>
+    </label>
+    <label>
+        Input Width:
+        <InputNumber id="width" @bind-Value="dto.Width" />
+    </label>
+    <label>
+        Input Height:
+        <InputNumber id="height" @bind-Value="dto.Height" />
+    </label>
+    <button type="submit">Submit</button>
+    <p></p>
+    <input type="text" @bind="Volume" />
+</EditForm>
+<p></p>
+<p></p>
+<p>The result of this complicated calculations is: @Volume</p>
+<p></p>
+<p></p>
+<p></p>
+<p>Test with IronXL</p>
+<p>Please provide the path of the excel file to compute</p>
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="basic-addon2" @bind-value="@pathLrKrTable">
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" @onclick="ReadLrKrData">Check</button>
+    </div>
+</div>
+
+<p></p>
+<p></p>
+<p></p>
+<p>Calculation result from IronXL: @Sum</p>
+
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+
+@if (allData == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Ship Mode</th>
+                <th>Profit</th>
+                <th>Unit Price</th>
+                <th>Shipping Cost</th>
+                <th>Customer Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var data in allData)
+            {
+                <tr>
+                    <td>@data.Pm</td>
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code
+{
+    private ExcelData[] allData;
+
+    DTOCalculations dto = new();    
+
+    public string Volume { get; set; }
+    public double Sum { get; set; }
+
+    private async void HandleSubmit()
+    {
+        var volumeTask = PerformComplicatedCalculations(dto);
+        var secondTask = ReadIronXLAsync();
+
+        var finishedTask = await volumeTask;                
+
+        Volume = finishedTask.ToString();
+        //System.Diagnostics.Debug.WriteLine(Volume);
+        StateHasChanged();
+
+        allData = await secondTask;
+        
+        foreach(ExcelData row in allData)
+        {
+            Sum += Convert.ToDouble(row.Pm);
+        }
+
+        //System.Diagnostics.Debug.WriteLine(Sum);
+
+        StateHasChanged();
+    }
+    async Task<double> PerformComplicatedCalculations(DTOCalculations dto)
+    {
+        await Task.Delay(1000);
+
+        return await Task.Run(() => ScientificCalculations.SciCalcGateway.ComplicatedCalculations(dto));
+    }
+
+    #region IronXL
+    string pathLrKrTable = @"C:\Users\gyane\OneDrive - Northern Crescent Inc\SCRIPTS\NC\NCLibrary\NCLibrary\Assets\Tables\Cracks\LotsofStress40000.xlsx";
+    bool IsLrKrFile { get; set; } 
+
+
+
+    private void CheckFile()
+    {
+        IsLrKrFile = System.IO.File.Exists(pathLrKrTable);
+    }    
+    async Task<double> ReadLrKrData()
+    {
+        CheckFile();
+        if (!IsLrKrFile) return 0;
+        await Task.Delay(5000);
+        return await Task.Run(()=> ExcelImport.ReadLrKrFile(pathLrKrTable));
+    }
+
+
+
+    async Task<ExcelData[]> ReadIronXLAsync()
+    {
+        double qSum = 100;
+
+        return await ExcelService.GetExcelAsync(pathLrKrTable);
+
+        
+
+        
+    } 
+    
+
+    #endregion // IronXL
+}

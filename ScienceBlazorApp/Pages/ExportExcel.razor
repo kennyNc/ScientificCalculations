@@ -1,0 +1,15 @@
+﻿@page "/export"
+@using ScienceBlazorApp.Data
+@inject IJSRuntime JS
+
+
+<h1>IronXL Export Excel File</h1>
+<p>Intuitive C# & VB.NET Excel API & No need to install MS Office or Excel Interop</p>
+<button class="btn btn-primary" @onclick="ExcelGeneration">Create Excel File</button>
+@code {
+    private void ExcelGeneration()
+    {
+        ExcelExport excelExport = new ExcelExport();
+        excelExport.ExcelGenerate(JS);
+    }
+}
